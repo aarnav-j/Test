@@ -93,16 +93,17 @@ app.get('/api/health', (req, res) => {
 });
 
 // ===========================
-// Root Route
+// API Info Endpoint
 // ===========================
-app.get('/', (req, res) => {
+app.get('/api/info', (req, res) => {
   res.json({
     status: 'ok',
     message: 'IoT Sensor Backend is running',
     endpoints: {
       'POST /api/sensor-data': 'ESP32 sends sensor data here',
       'GET /api/latest-data': 'Get latest sensor data (JSON format)',
-      'GET /api/health': 'Health check endpoint'
+      'GET /api/health': 'Health check endpoint',
+      'GET /': 'Dashboard (HTML)'
     },
     dataFormat: {
       temperature: 'float (°C)',
@@ -114,7 +115,7 @@ app.get('/', (req, res) => {
 });
 
 // ===========================
-// Serve Dashboard (optional)
+// Serve Dashboard at Root
 // ===========================
 app.use(express.static('../dashboard'));
 
