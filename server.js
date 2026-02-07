@@ -19,26 +19,28 @@ let lastUpdateTime = null;
 // Receives sensor data from ESP32
 app.post('/api/sensor-data', (req, res) => {
   try {
-    const { temperature, heartRate, motion, distanceButton } = req.body;
+    const { temperature, pulseRate, distress, rfId, ir } = req.body;
 
     // Validate that all required fields are present
     if (
       temperature === undefined ||
-      heartRate === undefined ||
-      motion === undefined ||
-      distanceButton === undefined
+      pulseRate === undefined ||
+      distress === undefined ||
+      rfId === undefined ||
+      ir === undefined
     ) {
       return res.status(400).json({
-        error: 'Missing required fields: temperature, heartRate, motion, distanceButton',
+        error: 'Missing required fields: temperature, pulseRate, distress, rfId, ir',
       });
     }
 
     // Store the latest data
     latestSensorData = {
       temperature: parseFloat(temperature),
-      heartRate: parseInt(heartRate),
-      motion: Boolean(motion),
-      distanceButton: Boolean(distanceButton),
+      pulseRate: parseInt(pulseRate),
+      distress: Boolean(distress),
+      rfId: Boolean(rfId),
+      ir: Boolean(ir),
     };
 
     lastUpdateTime = new Date().toISOString();
@@ -107,9 +109,10 @@ app.get('/api/info', (req, res) => {
     },
     dataFormat: {
       temperature: 'float (°C)',
-      heartRate: 'integer (BPM)',
-      motion: 'boolean',
-      distanceButton: 'boolean'
+      pulseRate: 'integer (BPM)',
+      distress: 'boolean',
+      rfId: 'boolean',
+      ir: 'boolean'
     }
   });
 });
@@ -145,3 +148,4 @@ app.listen(PORT, () => {
 
 // Note: For HTTPS in production, use a service like Render or Railway that provides SSL
 // They handle HTTPS automatically when you deploy this backend
+

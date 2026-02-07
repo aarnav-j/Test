@@ -22,7 +22,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             width: 100%;
         }
 
@@ -185,7 +185,7 @@
     <div class="container">
         <div class="header">
             <h1>📊 IoT Sensor Dashboard</h1>
-            <p>Real-time sensor data from ESP32</p>
+            <p>Real-time sensor data monitoring system</p>
         </div>
 
         <div id="content"></div>
@@ -230,7 +230,7 @@
                 contentDiv.innerHTML = `
                     <div class="loading">
                         <div class="loading-spinner"></div>
-                        <h2>Waiting for ESP32 data…</h2>
+                        <h2>Waiting for sensor data…</h2>
                         <p>Make sure ESP32 is running and sending data</p>
                     </div>
                 `;
@@ -241,6 +241,7 @@
 
             let html = '<div class="dashboard">';
 
+            // Temperature Card
             html += `
                 <div class="card">
                     <div class="card-icon">🌡️</div>
@@ -250,33 +251,48 @@
                 </div>
             `;
 
+            // Pulse Rate Card
             html += `
                 <div class="card">
-                    <div class="card-icon">❤️</div>
-                    <div class="card-label">Heart Rate</div>
-                    <div class="card-value">${data.heartRate}</div>
+                    <div class="card-icon">💓</div>
+                    <div class="card-label">Pulse Rate</div>
+                    <div class="card-value">${data.pulseRate}</div>
                     <div class="card-unit">BPM</div>
                 </div>
             `;
 
+            // Distress Card
             html += `
                 <div class="card">
-                    <div class="card-icon">🔍</div>
-                    <div class="card-label">Motion Detection</div>
+                    <div class="card-icon">⚠️</div>
+                    <div class="card-label">Distress</div>
                     <div>
-                        <span class="status-indicator ${data.motion ? 'status-active' : 'status-inactive'}"></span>
-                        <span class="status-text">${data.motion ? 'Detected' : 'Not Detected'}</span>
+                        <span class="status-indicator ${data.distress ? 'status-active' : 'status-inactive'}"></span>
+                        <span class="status-text">${data.distress ? 'ALERT' : 'Safe'}</span>
                     </div>
                 </div>
             `;
 
+            // RF ID Card
             html += `
                 <div class="card">
-                    <div class="card-icon">🔘</div>
-                    <div class="card-label">Distance Button</div>
+                    <div class="card-icon">📡</div>
+                    <div class="card-label">RF ID</div>
                     <div>
-                        <span class="status-indicator ${data.distanceButton ? 'status-active' : 'status-inactive'}"></span>
-                        <span class="status-text">${data.distanceButton ? 'Pressed' : 'Not Pressed'}</span>
+                        <span class="status-indicator ${data.rfId ? 'status-active' : 'status-inactive'}"></span>
+                        <span class="status-text">${data.rfId ? 'Detected' : 'Not Detected'}</span>
+                    </div>
+                </div>
+            `;
+
+            // IR Card
+            html += `
+                <div class="card">
+                    <div class="card-icon">🔴</div>
+                    <div class="card-label">IR Sensor</div>
+                    <div>
+                        <span class="status-indicator ${data.ir ? 'status-active' : 'status-inactive'}"></span>
+                        <span class="status-text">${data.ir ? 'Active' : 'Inactive'}</span>
                     </div>
                 </div>
             `;
@@ -291,13 +307,13 @@
 
             if (isConnected && lastData && lastData.data) {
                 statusDiv.className = 'status connected';
-                statusDiv.textContent = '✓ Connected to ESP32';
+                statusDiv.textContent = '✓ Connected - Live data streaming';
                 
                 const timestamp = new Date(lastData.timestamp);
                 updateDiv.textContent = `Last update: ${timestamp.toLocaleTimeString()}`;
             } else {
                 statusDiv.className = 'status waiting';
-                statusDiv.textContent = '⏳ Waiting for ESP32 data...';
+                statusDiv.textContent = '⏳ Waiting for sensor data...';
                 updateDiv.textContent = '';
             }
         }
@@ -319,3 +335,4 @@
     </script>
 </body>
 </html>
+
