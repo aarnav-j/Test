@@ -117,7 +117,7 @@ app.get('/api/info', (req, res) => {
 // ===========================
 // Serve Dashboard at Root
 // ===========================
-app.use(express.static('../dashboard'));
+app.use(express.static('./public'));
 
 // ===========================
 // Error Handling

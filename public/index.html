@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Sensor Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .card-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .card-unit {
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        .status-active {
+            background-color: #00d084;
+            box-shadow: 0 0 10px rgba(0, 208, 132, 0.5);
+        }
+
+        .status-inactive {
+            background-color: #e74c3c;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
+        }
+
+        .status-text {
+            font-size: 1.2em;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .status {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .status.waiting {
+            color: #ffc107;
+        }
+
+        .status.connected {
+            color: #00d084;
+        }
+
+        .timestamp {
+            font-size: 0.85em;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .card-value {
+                font-size: 1.8em;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 IoT Sensor Dashboard</h1>
+            <p>Real-time sensor data from ESP32</p>
+        </div>
+
+        <div id="content"></div>
+
+        <div class="footer">
+            <div class="status" id="connectionStatus">Connecting...</div>
+            <div class="timestamp" id="lastUpdate"></div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:3000';
+        const FETCH_INTERVAL = 2000;
+
+        let lastData = null;
+        let fetchIntervalId = null;
+
+        async function fetchLatestData() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/latest-data`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                lastData = result;
+
+                updateDashboard(result);
+                updateConnectionStatus(true);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        function updateDashboard(result) {
+            const contentDiv = document.getElementById('content');
+
+            if (result.status === 'waiting' || result.data === null) {
+                contentDiv.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <h2>Waiting for ESP32 data…</h2>
+                        <p>Make sure ESP32 is running and sending data</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const data = result.data;
+
+            let html = '<div class="dashboard">';
+
+            html += `
+                <div class="card">
+                    <div class="card-icon">🌡️</div>
+                    <div class="card-label">Temperature</div>
+                    <div class="card-value">${data.temperature.toFixed(1)}</div>
+                    <div class="card-unit">°C</div>
+                </div>
+            `;
+
+            html += `
+                <div class="card">
+                    <div class="card-icon">❤️</div>
+                    <div class="card-label">Heart Rate</div>
+                    <div class="card-value">${data.heartRate}</div>
+                    <div class="card-unit">BPM</div>
+                </div>
+            `;
+
+            html += `
+                <div class="card">
+                    <div class="card-icon">🔍</div>
+                    <div class="card-label">Motion Detection</div>
+                    <div>
+                        <span class="status-indicator ${data.motion ? 'status-active' : 'status-inactive'}"></span>
+                        <span class="status-text">${data.motion ? 'Detected' : 'Not Detected'}</span>
+                    </div>
+                </div>
+            `;
+
+            html += `
+                <div class="card">
+                    <div class="card-icon">🔘</div>
+                    <div class="card-label">Distance Button</div>
+                    <div>
+                        <span class="status-indicator ${data.distanceButton ? 'status-active' : 'status-inactive'}"></span>
+                        <span class="status-text">${data.distanceButton ? 'Pressed' : 'Not Pressed'}</span>
+                    </div>
+                </div>
+            `;
+
+            html += '</div>';
+            contentDiv.innerHTML = html;
+        }
+
+        function updateConnectionStatus(isConnected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            const updateDiv = document.getElementById('lastUpdate');
+
+            if (isConnected && lastData && lastData.data) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '✓ Connected to ESP32';
+                
+                const timestamp = new Date(lastData.timestamp);
+                updateDiv.textContent = `Last update: ${timestamp.toLocaleTimeString()}`;
+            } else {
+                statusDiv.className = 'status waiting';
+                statusDiv.textContent = '⏳ Waiting for ESP32 data...';
+                updateDiv.textContent = '';
+            }
+        }
+
+        function startDashboard() {
+            console.log(`Connecting to backend at: ${BACKEND_URL}`);
+            fetchLatestData();
+            fetchIntervalId = setInterval(fetchLatestData, FETCH_INTERVAL);
+        }
+
+        function stopDashboard() {
+            if (fetchIntervalId) {
+                clearInterval(fetchIntervalId);
+            }
+        }
+
+        window.addEventListener('load', startDashboard);
+        window.addEventListener('beforeunload', stopDashboard);
+    </script>
+</body>
+</html>
