@@ -197,7 +197,8 @@
     </div>
 
     <script>
-        const BACKEND_URL = 'http://localhost:3000';
+        // Use current origin for both local and deployed environments
+        const BACKEND_URL = window.location.origin;
         const FETCH_INTERVAL = 2000;
 
         let lastData = null;
